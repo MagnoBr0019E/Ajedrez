@@ -1,0 +1,324 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Buscador de Partidas</title>
+    <script src="https://code.jquery.com/jquery-3.5.1.min.js"></script>
+    <style>
+        body { 
+            font-family: sans-serif; 
+            background: #262522; 
+            color: #fff; 
+            padding: 10px;
+            margin: 0;
+        }
+        
+        .container { 
+            max-width: 550px; 
+            width: 95%;
+            margin: 20px auto; 
+            background: #2a2926; 
+            padding: 25px; 
+            border-radius: 12px; 
+            border: 1px solid #4a4944; 
+            box-sizing: border-box;
+        }
+
+        h1 {
+            text-align: center;
+            font-size: 24px;
+            margin-top: 0;
+            margin-bottom: 20px;
+        }
+
+        label {
+            font-weight: bold;
+            display: block;
+            margin-bottom: 8px;
+            color: #bab9b7;
+        }
+
+        input[type="text"] {
+            width: 100%;
+            padding: 14px;
+            font-size: 18px;
+            background: #3c3b37;
+            border: 1px solid #4a4944;
+            color: #fff;
+            border-radius: 6px;
+            box-sizing: border-box;
+            margin-bottom: 20px;
+        }
+
+        button.btn-buscar { 
+            padding: 16px; 
+            font-size: 18px; 
+            width: 100%; 
+            box-sizing: border-box; 
+            margin-bottom: 25px; 
+            border-radius: 6px; 
+            background: #81b64c; 
+            color: white; 
+            border: none; 
+            font-weight: bold; 
+            cursor: pointer;
+            text-transform: uppercase;
+        }
+
+        button.btn-buscar:hover { 
+            background: #a3d16c; 
+        }
+
+        h3 {
+            border-bottom: 1px solid #4a4944;
+            padding-bottom: 8px;
+            margin-bottom: 15px;
+            color: #bab9b7;
+        }
+
+        #listaPartidas {
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+        }
+
+        .contenedor-tarjeta {
+            display: flex;
+            flex-direction: column;
+            background: #3c3b37;
+            border: 1px solid #4a4944;
+            border-radius: 8px;
+            overflow: hidden;
+        }
+
+        .tarjeta-partida {
+            padding: 15px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            cursor: pointer;
+            transition: background 0.2s;
+        }
+
+        .tarjeta-partida:hover {
+            background: #45443f;
+        }
+
+        .info-partida {
+            display: flex;
+            flex-direction: column;
+            gap: 4px;
+        }
+
+        .rival-nombre {
+            font-weight: bold;
+            font-size: 18px;
+        }
+
+        .modo-juego {
+            font-size: 13px;
+            color: #bab9b7;
+        }
+
+        .badge {
+            padding: 6px 12px;
+            border-radius: 20px;
+            font-weight: bold;
+            font-size: 14px;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        .badge-ganaste {
+            background: rgba(129, 182, 76, 0.2);
+            color: #81b64c;
+            border: 1px solid #81b64c;
+        }
+
+        .badge-perdiste {
+            background: rgba(224, 83, 83, 0.2);
+            color: #e05353;
+            border: 1px solid #e05353;
+        }
+
+        .bloque-analisis-interno {
+            background: #21201e;
+            padding: 12px 15px;
+            border-top: 1px solid #4a4944;
+            text-align: center;
+        }
+
+        .texto-analisis {
+            font-size: 13px;
+            font-weight: bold;
+            color: #bab9b7;
+            margin-bottom: 8px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 6px;
+        }
+
+        .barra-progreso-fondo {
+            width: 100%;
+            height: 10px;
+            background: #3c3b37;
+            border-radius: 50px;
+            overflow: hidden;
+        }
+
+        .barra-progreso-relleno {
+            width: 0%;
+            height: 100%;
+            background: #81b64c;
+            border-radius: 50px;
+            transition: width 0.1s linear;
+        }
+
+        #consolaEstado {
+            text-align: center;
+            font-size: 14px;
+            color: #bab9b7;
+            margin-bottom: 15px;
+        }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <h1>🕵️‍♂️ Buscador de Partidas</h1>
+    
+    <label for="username">Tu Usuario de Chess.com:</label>
+    <input type="text" id="username" value="oscar2298" placeholder="Escribe tu usuario aquí...">
+    
+    <button class="btn-buscar" onclick="buscarPartidas()">Buscar mis partidas</button>
+    
+    <div id="consolaEstado"></div>
+    
+    <h3>Partidas Recientes:</h3>
+    <div id="listaPartidas"></div>
+</div>
+
+<script>
+let partidasCargadas = [];
+let cargandoPartida = false; 
+
+async function buscarPartidas() {
+    if (cargandoPartida) return;
+    
+    const username = document.getElementById('username').value.trim();
+    const listaDiv = document.getElementById('listaPartidas');
+    const consola = document.getElementById('consolaEstado');
+    
+    if (!username) {
+        alert("Por favor, ingresa un nombre de usuario.");
+        return;
+    }
+
+    listaDiv.innerHTML = "";
+    consola.innerHTML = "🔍 Buscando partidas activas en los servidores...";
+    
+    const fecha = new Date();
+    const anio = fecha.getFullYear();
+    const mes = String(fecha.getMonth() + 1).padStart(2, '0');
+    
+    const url = `https://api.chess.com/pub/player/${username}/games/${anio}/${mes}`;
+    const proxyUrl = `https://api.allorigins.win/get?url=${encodeURIComponent(url)}`;
+
+    try {
+        const respuesta = await fetch(proxyUrl);
+        const contenedor = await respuesta.json();
+        const datos = JSON.parse(contenedor.contents);
+
+        if (!datos.games || datos.games.length === 0) {
+            consola.innerHTML = "❌ No se encontraron partidas en este mes.";
+            return;
+        }
+
+        partidasCargadas = datos.games.reverse().slice(0, 5);
+        consola.innerHTML = "✅ Partidas listas. Elige una para analizar.";
+
+        partidasCargadas.forEach((partida, indice) => {
+            const esBlancas = partida.white.username.toLowerCase() === username.toLowerCase();
+            const rival = esBlancas ? partida.black.username : partida.white.username;
+            const resultadoPropio = esBlancas ? partida.white.result : partida.black.result;
+            
+            const gano = resultadoPropio === "win";
+            const claseBadge = gano ? "badge badge-ganaste" : "badge badge-perdiste";
+            const textoBadge = gano ? "🟢 Ganaste" : "🔴 Perdiste";
+            const modoJuego = partida.time_class ? partida.time_class.toUpperCase() : "RAPID";
+
+            const tarjetaHtml = `
+                <div class="contenedor-tarjeta" id="contenedor-${indice}">
+                    <div class="tarjeta-partida" onclick="procesarSeleccion(${indice})">
+                        <div class="info-partida">
+                            <span class="rival-nombre">vs ${rival}</span>
+                            <span class="modo-juego">Modo: ${modoJuego}</span>
+                        </div>
+                        <div class="${claseBadge}">${textoBadge}</div>
+                    </div>
+                    <div id="analisis-${indice}"></div>
+                </div>
+            `;
+            listaDiv.innerHTML += tarjetaHtml;
+        });
+
+    } catch (e) {
+        consola.innerHTML = "❌ Error de conexión al consultar Chess.com.";
+    }
+}
+
+function procesarSeleccion(indice) {
+    if (cargandoPartida) return;
+    
+    const partida = partidasCargadas[indice];
+    if (!partida) return;
+
+    cargandoPartida = true;
+    localStorage.setItem('partida_actual', JSON.stringify(partida));
+
+    const zonaAnalisis = document.getElementById(`analisis-${indice}`);
+    
+    zonaAnalisis.innerHTML = `
+        <div class="bloque-analisis-interno">
+            <div class="texto-analisis">
+                ⚙️ <span id="mensajeCarga">Iniciando motor Stockfish...</span>
+            </div>
+            <div class="barra-progreso-fondo">
+                <div id="barraProgreso" class="barra-progreso-relleno"></div>
+            </div>
+        </div>
+    `;
+
+    const barra = document.getElementById('barraProgreso');
+    const etiquetaTexto = document.getElementById('mensajeCarga');
+    let progreso = 0;
+    
+    const temporizador = setInterval(() => {
+        progreso += 2;
+        barra.style.width = progreso + "%";
+
+        if (progreso < 30) {
+            etiquetaTexto.innerText = "Preparando tablero y base de datos...";
+        } else if (progreso >= 30 && progreso < 65) {
+            etiquetaTexto.innerText = "Stockfish analizando jugadas...";
+        } else if (progreso >= 65 && progreso < 90) {
+            etiquetaTexto.innerText = "Calculando variantes óptimas...";
+        } else if (progreso >= 90) {
+            etiquetaTexto.innerText = "¡Análisis completo! Abriendo...";
+        }
+
+        if (progreso >= 100) {
+            clearInterval(temporizador);
+            setTimeout(() => {
+                window.location.href = 'tablero.html';
+            }, 300);
+        }
+    }, 40);
+}
+</script>
+
+</body>
+</html>
