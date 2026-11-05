@@ -37,7 +37,6 @@
     <h1>🕵️‍♂️ Buscador de Partidas</h1>
     
     <label for="username">Tu Usuario de Chess.com:</label>
-    <!-- Campo dinámico para que escribas tu usuario actual libremente -->
     <input type="text" id="username" placeholder="Escribe tu usuario aquí...">
     
     <button class="btn-buscar" onclick="buscarPartidas()">Buscar mis partidas</button>
@@ -64,7 +63,6 @@ async function buscarPartidas() {
         return;
     }
 
-    // Guardamos el usuario introducido para usarlo en la siguiente pantalla
     localStorage.setItem('usuario_actual', username);
 
     listaDiv.innerHTML = "";
@@ -74,13 +72,11 @@ async function buscarPartidas() {
     const anio = fecha.getFullYear();
     const mes = String(fecha.getMonth() + 1).padStart(2, '0');
     
-    const url = `https://api.chess.com/pub/player/${username}/games/${anio}/${mes}`;
-    const proxyUrl = `https://api.allorigins.win/get?url=${encodeURIComponent(url)}`;
+    const url = `https://api.chess.com/pub/player/${username}/games/${anio}/${mes}`; const proxyUrl = `https://corsproxy.io/?${encodeURIComponent(url)}`;
 
     try {
         const respuesta = await fetch(proxyUrl);
-        const contenedor = await respuesta.json();
-        const datos = JSON.parse(contenedor.contents);
+        const datos = await respuesta.json();
 
         if (!datos.games || datos.games.length === 0) {
             consola.innerHTML = "❌ No se encontraron partidas en este mes.";
@@ -136,40 +132,4 @@ function procesarSeleccion(indice) {
             <div class="texto-analisis">
                 ⚙️ <span id="mensajeCarga">Iniciando motor Stockfish...</span>
             </div>
-            <div class="barra-progreso-fondo">
-                <div id="barraProgreso" class="barra-progreso-relleno"></div>
-            </div>
-        </div>
-    `;
-
-    const barra = document.getElementById('barraProgreso');
-    const etiquetaTexto = document.getElementById('mensajeCarga');
-    let progreso = 0;
-    
-    const temporizador = setInterval(() => {
-        progreso += 2;
-        barra.style.width = progreso + "%";
-
-        if (progreso < 30) {
-            etiquetaTexto.innerText = "Preparando tablero y base de datos...";
-        } else if (progreso >= 30 && progreso < 65) {
-            etiquetaTexto.innerText = "Stockfish analizando jugadas...";
-        } else if (progreso >= 65 && progreso < 90) {
-            etiquetaTexto.innerText = "Calculando variantes óptimas...";
-        } else if (progreso >= 90) {
-            etiquetaTexto.innerText = "¡Análisis completo! Abriendo...";
-        }
-
-        if (progreso >= 100) {
-            clearInterval(temporizador);
-            setTimeout(() => {
-                window.location.href = 'tablero.html';
-            }, 300);
-        }
-    }, 40);
-}
-</script>
-
-</body>
-    </html>
-    
+            <div class="barra-
