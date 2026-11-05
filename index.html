@@ -28,7 +28,7 @@
         .texto-analisis { font-size: 13px; font-weight: bold; color: #bab9b7; margin-bottom: 8px; display: flex; align-items: center; justify-content: center; gap: 6px; }
         .barra-progreso-fondo { width: 100%; height: 10px; background: #3c3b37; border-radius: 50px; overflow: hidden; }
         .barra-progreso-relleno { width: 0%; height: 100%; background: #81b64c; border-radius: 50px; transition: width 0.1s linear; }
-        #consolaEstado { text-align: center; font-size: 14px; color: #bab9b7; margin-bottom: 15px; }
+        #consolaEstado { text-align: center; font-size: 14px; color: #bab9b7; margin-bottom: 15px; font-weight: bold; }
     </style>
 </head>
 <body>
@@ -41,7 +41,7 @@
     
     <button class="btn-buscar" onclick="buscarPartidas()">Buscar mis partidas</button>
     
-    <div id="consolaEstado"></div>
+    <div id="consolaEstado">Listo para buscar</div>
     
     <h3>Partidas Recientes:</h3>
     <div id="listaPartidas"></div>
@@ -55,8 +55,8 @@ async function buscarPartidas() {
     if (cargandoPartida) return;
     
     const username = document.getElementById('username').value.trim();
-    const listaDiv = document.getElementById('listaPartidas');
     const consola = document.getElementById('consolaEstado');
+    const listaDiv = document.getElementById('listaPartidas');
     
     if (!username) {
         alert("Por favor, ingresa un nombre de usuario.");
@@ -66,16 +66,18 @@ async function buscarPartidas() {
     localStorage.setItem('usuario_actual', username);
 
     listaDiv.innerHTML = "";
-    consola.innerHTML = "🔍 Buscando partidas activas en los servidores...";
+    consola.innerHTML = "🔍 Buscando partidas de " + username + "...";
     
     const fecha = new Date();
     const anio = fecha.getFullYear();
     const mes = String(fecha.getMonth() + 1).padStart(2, '0');
     
-    const url = `https://api.chess.com/pub/player/${username}/games/${anio}/${mes}`; const proxyUrl = `https://corsproxy.io/?${encodeURIComponent(url)}`;
+    const url = `https://api.chess.com/pub/player/${username}/games/${anio}/${mes}`;
+    const proxyUrl = `https://corsproxy.io/?${encodeURIComponent(url)}`;
 
     try {
         const respuesta = await fetch(proxyUrl);
+        if (!respuesta.ok) throw new Error("Error en la red");
         const datos = await respuesta.json();
 
         if (!datos.games || datos.games.length === 0) {
@@ -84,7 +86,7 @@ async function buscarPartidas() {
         }
 
         partidasCargadas = datos.games.reverse().slice(0, 5);
-        consola.innerHTML = "✅ Partidas listas. Elige una para analizar.";
+        consola.innerHTML = "✅ ¡Partidas encontradas con éxito!";
 
         partidasCargadas.forEach((partida, indice) => {
             const esBlancas = partida.white.username.toLowerCase() === username.toLowerCase();
@@ -112,7 +114,7 @@ async function buscarPartidas() {
         });
 
     } catch (e) {
-        consola.innerHTML = "❌ Error de conexión al consultar Chess.com.";
+        consola.innerHTML = "❌ Error al conectar con Chess.com.";
     }
 }
 
@@ -132,4 +134,39 @@ function procesarSeleccion(indice) {
             <div class="texto-analisis">
                 ⚙️ <span id="mensajeCarga">Iniciando motor Stockfish...</span>
             </div>
-            <div class="barra-
+            <div class="barra-progreso-fondo">
+                <div id="barraProgreso" class="barra-progreso-relleno"></div>
+            </div>
+        </div>
+    `;
+
+    const barra = document.getElementById('barraProgreso');
+    const etiquetaTexto = document.getElementById('mensajeCarga');
+    let progreso = 0;
+    
+    const temporizador = setInterval(() => {
+        progreso += 2;
+        barra.style.width = progreso + "%";
+
+        if (progreso < 30) {
+            etiquetaTexto.innerText = "Preparando tablero y base de datos...";
+        } else if (progreso >= 30 && progreso < 65) {
+            etiquetaTexto.innerText = "Stockfish analizando jugadas...";
+        } else if (progreso >= 65 && progreso < 90) {
+            etiquetaTexto.innerText = "Calculando variantes óptimas...";
+        } else if (progreso >= 90) {
+            etiquetaTexto.innerText = "¡Análisis completo! Abriendo...";
+        }
+
+        if (progreso >= 100) {
+            clearInterval(temporizador);
+            setTimeout(() => {
+                window.location.href = 'tablero.html';
+            }, 300);
+        }
+    }, 40);
+}
+</script>
+
+</body>
+</html>
