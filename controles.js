@@ -1,4 +1,4 @@
-// controles.js - Versión interactiva con historial limpio y scroll
+// controles.js - Control de tablero con historial estilizado y cálculo dinámico de barra bicolor
 let juegoVirtual = new Chess();
 let historialMovimientos = [];
 let indiceActual = 0;
@@ -33,13 +33,13 @@ window.addEventListener('load', () => {
         
         panelHistorial.innerHTML = `
             <div class="lista-movimientos" id="contenedorListaMovs"></div>
-            <div style="display: flex; gap: 6px; margin-bottom: 8px;">
+            <div style="display: flex; gap: 6px; margin-bottom: 6px;">
                 <button style="${btnEstilo}" onclick="irInicio()">⏮</button>
                 <button style="${btnEstilo}" onclick="irAtras()">◀</button>
                 <button style="${btnEstilo}" onclick="irAdelante()">▶</button>
                 <button style="${btnEstilo}" onclick="irFinal()">⏭</button>
             </div>
-            <div id="infoMov" style="text-align:center; font-weight:bold; color: #bab9b7; font-size: 13px;">Movimiento: 0 / ${historialMovimientos.length}</div>
+            <div id="infoMov" style="text-align:center; font-weight:bold; color: #bab9b7; font-size: 12px;">Movimiento: 0 / ${historialMovimientos.length}</div>
         `;
         wrapper.appendChild(panelHistorial);
         
@@ -57,6 +57,7 @@ function refrescarTablero() {
         draggable: false
     });
     actualizarResaltadoVisual();
+    actualizarBarraVentaja();
 }
 
 function construirListaVisual() {
@@ -81,11 +82,9 @@ function construirListaVisual() {
 }
 
 function actualizarResaltadoVisual() {
-    // Quitamos la clase activa de todos
     document.querySelectorAll('.movimiento-item').forEach(el => {
         el.classList.remove('movimiento-activo');
     });
-    // Activamos el actual si corresponde
     if (indiceActual > 0) {
         const elementoActivo = document.getElementById(`mov-${indiceActual - 1}`);
         if (elementoActivo) {
@@ -95,6 +94,33 @@ function actualizarResaltadoVisual() {
     }
     const el = document.getElementById('infoMov');
     if (el) el.innerText = `Movimiento: ${indiceActual} / ${historialMovimientos.length}`;
+}
+
+// Calcula el balance de material actual para mover la barra bicolor negra y blanca
+function actualizarBarraVentaja() {
+    const fenActual = juegoVirtual.fen().split(' ')[0];
+    const valores = { p: 1, n: 3, b: 3, r: 5, q: 9, k: 0 };
+    let puntosBlancas = 0;
+    let puntosNegras = 0;
+
+    for (let char of fenActual) {
+        if (char === char.toUpperCase() && values[char.toLowerCase()]) {
+            puntosBlancas += valores[char.toLowerCase()];
+        } else if (char === char.toLowerCase() && valores[char]) {
+            puntosNegras += valores[char];
+        }
+    }
+
+    // Proporción base para la barra bicolor
+    const total = puntosBlancas + puntosNegras || 39;
+    const porcentajeBlancas = Math.max(10, Math.min(90, (puntosBlancas / total) * 100));
+    
+    const barraB = document.getElementById('barraBlancas');
+    const barraN = document.getElementById('barraNegras');
+    if (barraB && barraN) {
+        barraB.style.width = porcentajeBlancas + "%";
+        barraN.style.width = (100 - porcentajeBlancas) + "%";
+    }
 }
 
 function irAMovimiento(targetIndice) {
