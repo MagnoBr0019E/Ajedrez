@@ -9,25 +9,35 @@
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/chessboard-js/1.0.0/chessboard-1.0.0.min.css">
     <script src="https://code.jquery.com/jquery-3.5.1.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/chessboard-js/1.0.0/chessboard-1.0.0.min.js"></script>
-    <!-- Cargamos chess.js antes de nuestros scripts personalizados -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/chess.js/0.10.3/chess.min.js"></script>
 
     <style>
         body { font-family: sans-serif; background: #262522; color: #fff; padding: 10px; margin: 0; }
         .container { max-width: 550px; width: 95%; margin: 20px auto; background: #2a2926; padding: 25px; border-radius: 12px; border: 1px solid #4a4944; box-sizing: border-box; }
-        button { padding: 16px; font-size: 18px; width: 100%; box-sizing: border-box; margin-bottom: 20px; border-radius: 6px; background: #4a4944; color: white; border: none; font-weight: bold; cursor: pointer; text-transform: uppercase; }
-        button:hover { background: #5c5b55; }
+        button.btn-volver { padding: 14px; font-size: 16px; width: 100%; box-sizing: border-box; margin-bottom: 20px; border-radius: 6px; background: #4a4944; color: white; border: none; font-weight: bold; cursor: pointer; text-transform: uppercase; }
+        button.btn-volver:hover { background: #5c5b55; }
         #wrapperTablero { width: 100%; max-width: 400px; margin: 0 auto; display: flex; flex-direction: column; gap: 8px; }
         .fila-jugador { display: flex; align-items: center; gap: 10px; font-size: 16px; padding: 2px 0; }
         .profile-avatar { width: 32px; height: 32px; border-radius: 4px; object-fit: cover; display: block; }
         .avatar-inicial { width: 32px; height: 32px; border-radius: 50%; background-color: #4a4944; color: #eeeeee; display: flex; align-items: center; justify-content: center; font-weight: bold; font-size: 16px; text-transform: uppercase; user-select: none; }
         .nombre-texto { font-weight: bold; color: #fff; }
+
+        /* Estilos mejorados para la lista de movimientos y controles */
+        .panel-historial { background: #21201e; border: 1px solid #4a4944; border-radius: 8px; padding: 12px; margin-top: 15px; width: 100%; box-sizing: border-box; }
+        .lista-movimientos { max-height: 140px; overflow-y: auto; display: flex; flex-direction: column; gap: 4px; padding-right: 5px; margin-bottom: 12px; }
+        .lista-movimientos::-webkit-scrollbar { width: 6px; }
+        .lista-movimientos::-webkit-scrollbar-thumb { background: #4a4944; border-radius: 3px; }
+        .fila-historial { display: grid; grid-template-columns: 45px 1fr 1fr; gap: 8px; font-size: 14px; padding: 4px 8px; border-radius: 4px; align-items: center; }
+        .turno-num { color: #bab9b7; font-weight: bold; }
+        .movimiento-item { padding: 4px 8px; border-radius: 4px; cursor: pointer; color: #fff; text-align: center; transition: background 0.2s; }
+        .movimiento-item:hover { background: #3c3b37; }
+        .movimiento-activo { background: #81b64c !important; color: #fff; font-weight: bold; }
     </style>
 </head>
 <body>
 
 <div class="container">
-    <button onclick="window.location.href='index.html'">⬅️ Volver al Buscador</button>
+    <button class="btn-volver" onclick="window.location.href='index.html'">⬅️ Volver al Buscador</button>
     
     <div id="wrapperTablero">
         <div id="perfilRival" class="fila-jugador"></div>
@@ -46,7 +56,7 @@ window.addEventListener('DOMContentLoaded', async () => {
     }
     
     const partida = JSON.parse(datosRaw);
-    const usuarioActual = "oscar2298";
+    const usuarioActual = localStorage.getItem('usuario_actual') || "oscar2298";
 
     async function obtenerAvatar(username) {
         const urlPerfil = `https://api.chess.com/pub/player/${username}`;
@@ -86,7 +96,6 @@ window.addEventListener('DOMContentLoaded', async () => {
 });
 </script>
 
-<!-- Tu script de controles que gestiona la lógica del tablero -->
 <script src="controles.js"></script>
 
 </body>
