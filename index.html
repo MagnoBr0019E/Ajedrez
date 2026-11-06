@@ -143,6 +143,12 @@
             border: 1px solid #e05353;
         }
 
+        .badge-empate {
+            background: rgba(241, 196, 15, 0.2);
+            color: #f1c40f;
+            border: 1px solid #f1c40f;
+        }
+
         .bloque-analisis-interno {
             background: #21201e;
             padding: 12px 15px;
@@ -191,7 +197,6 @@
     <h1>🕵️‍♂️ Buscador de Partidas</h1>
     
     <label for="username">Tu Usuario de Chess.com:</label>
-    <!-- Campo limpio y dinámico listo para escribir cualquier usuario -->
     <input type="text" id="username" placeholder="Escribe tu usuario aquí...">
     
     <button class="btn-buscar" onclick="buscarPartidas()">Buscar mis partidas</button>
@@ -218,7 +223,6 @@ async function buscarPartidas() {
         return;
     }
 
-    // Guardamos el usuario actual en el almacenamiento local para el tablero
     localStorage.setItem('usuario_actual', username);
 
     listaDiv.innerHTML = "";
@@ -249,9 +253,17 @@ async function buscarPartidas() {
             const rival = esBlancas ? partida.black.username : partida.white.username;
             const resultadoPropio = esBlancas ? partida.white.result : partida.black.result;
             
-            const gano = resultadoPropio === "win";
-            const claseBadge = gano ? "badge badge-ganaste" : "badge badge-perdiste";
-            const textoBadge = gano ? "🟢 Ganaste" : "🔴 Perdiste";
+            let claseBadge = "badge badge-perdiste";
+            let textoBadge = "🔴 Perdiste";
+
+            if (resultadoPropio === "win") {
+                claseBadge = "badge badge-ganaste";
+                textoBadge = "🟢 Ganaste";
+            } else if (resultadoPropio === "draw" || resultadoPropio === "stalemate" || resultadoPropio === "agreed" || resultadoPropio === "repetition") {
+                claseBadge = "badge badge-empate";
+                textoBadge = "🟡 Empate";
+            }
+
             const modoJuego = partida.time_class ? partida.time_class.toUpperCase() : "RAPID";
 
             const tarjetaHtml = `
