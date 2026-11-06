@@ -5,7 +5,6 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Tablero de Ajedrez</title>
     
-    <!-- Librerías de Estilos y Dependencias Base -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/chessboard-js/1.0.0/chessboard-1.0.0.min.css">
     <script src="https://code.jquery.com/jquery-3.5.1.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/chessboard-js/1.0.0/chessboard-1.0.0.min.js"></script>
@@ -17,21 +16,30 @@
         button.btn-volver { padding: 14px; font-size: 16px; width: 100%; box-sizing: border-box; margin-bottom: 20px; border-radius: 6px; background: #4a4944; color: white; border: none; font-weight: bold; cursor: pointer; text-transform: uppercase; }
         button.btn-volver:hover { background: #5c5b55; }
         #wrapperTablero { width: 100%; max-width: 400px; margin: 0 auto; display: flex; flex-direction: column; gap: 8px; }
-        .fila-jugador { display: flex; align-items: center; gap: 10px; font-size: 16px; padding: 2px 0; }
-        .profile-avatar { width: 32px; height: 32px; border-radius: 4px; object-fit: cover; display: block; }
-        .avatar-inicial { width: 32px; height: 32px; border-radius: 50%; background-color: #4a4944; color: #eeeeee; display: flex; align-items: center; justify-content: center; font-weight: bold; font-size: 16px; text-transform: uppercase; user-select: none; }
+        
+        .fila-jugador { display: flex; align-items: center; justify-content: space-between; font-size: 15px; padding: 6px 10px; background: #3c3b37; border-radius: 6px; border: 1px solid #4a4944; }
+        .info-usuario { display: flex; align-items: center; gap: 10px; }
+        .profile-avatar { width: 30px; height: 30px; border-radius: 4px; object-fit: cover; display: block; }
+        .avatar-inicial { width: 30px; height: 30px; border-radius: 50%; background-color: #4a4944; color: #eeeeee; display: flex; align-items: center; justify-content: center; font-weight: bold; font-size: 14px; text-transform: uppercase; }
         .nombre-texto { font-weight: bold; color: #fff; }
 
-        /* Estilos mejorados para la lista de movimientos y controles */
-        .panel-historial { background: #21201e; border: 1px solid #4a4944; border-radius: 8px; padding: 12px; margin-top: 15px; width: 100%; box-sizing: border-box; }
-        .lista-movimientos { max-height: 140px; overflow-y: auto; display: flex; flex-direction: column; gap: 4px; padding-right: 5px; margin-bottom: 12px; }
-        .lista-movimientos::-webkit-scrollbar { width: 6px; }
+        /* Barra de balance / ventaja bicolor (negro y blanco) */
+        .barra-ventaja-container { width: 100%; height: 6px; background: #4a4944; border-radius: 3px; overflow: hidden; display: flex; margin: 4px 0; }
+        .barra-ventaja-blancas { width: 50%; height: 100%; background: #ffffff; transition: width 0.3s ease; }
+        .barra-ventaja-negras { width: 50%; height: 100%; background: #1a1a1a; transition: width 0.3s ease; }
+
+        /* Panel de movimientos limpio y moderno */
+        .panel-historial { background: #21201e; border: 1px solid #4a4944; border-radius: 8px; padding: 12px; margin-top: 10px; width: 100%; box-sizing: border-box; }
+        .lista-movimientos { max-height: 130px; overflow-y: auto; display: flex; flex-direction: column; gap: 3px; padding-right: 4px; margin-bottom: 10px; }
+        .lista-movimientos::-webkit-scrollbar { width: 5px; }
         .lista-movimientos::-webkit-scrollbar-thumb { background: #4a4944; border-radius: 3px; }
-        .fila-historial { display: grid; grid-template-columns: 45px 1fr 1fr; gap: 8px; font-size: 14px; padding: 4px 8px; border-radius: 4px; align-items: center; }
-        .turno-num { color: #bab9b7; font-weight: bold; }
-        .movimiento-item { padding: 4px 8px; border-radius: 4px; cursor: pointer; color: #fff; text-align: center; transition: background 0.2s; }
-        .movimiento-item:hover { background: #3c3b37; }
-        .movimiento-activo { background: #81b64c !important; color: #fff; font-weight: bold; }
+        
+        .fila-historial { display: flex; align-items: center; font-size: 13px; padding: 4px 6px; border-radius: 4px; gap: 8px; }
+        .fila-historial:hover { background: #2a2926; }
+        .turno-num { color: #8c8b87; font-weight: bold; width: 30px; }
+        .movimiento-item { flex: 1; padding: 3px 6px; border-radius: 4px; cursor: pointer; text-align: center; color: #dcdbd6; transition: background 0.15s; }
+        .movimiento-item:hover { background: #3c3b37; color: #fff; }
+        .movimiento-activo { background: #81b64c !important; color: #fff !important; font-weight: bold; }
     </style>
 </head>
 <body>
@@ -41,6 +49,13 @@
     
     <div id="wrapperTablero">
         <div id="perfilRival" class="fila-jugador"></div>
+        
+        <!-- Barra de ventaja bicolor -->
+        <div class="barra-ventaja-container">
+            <div id="barraBlancas" class="barra-ventaja-blancas"></div>
+            <div id="barraNegras" class="barra-ventaja-negras"></div>
+        </div>
+
         <div id="board" style="width: 100%"></div>
         <div id="perfilPropio" class="fila-jugador"></div>
     </div>
@@ -91,8 +106,8 @@ window.addEventListener('DOMContentLoaded', async () => {
         datosRival = { username: partida.black.username, avatar: avatarNegras };
     }
 
-    document.getElementById('perfilRival').innerHTML = `${renderizarAvatarHtml(datosRival.username, datosRival.avatar)} <span class="nombre-texto">${datosRival.username}</span>`;
-    document.getElementById('perfilPropio').innerHTML = `${renderizarAvatarHtml(datosPropio.username, datosPropio.avatar)} <span class="nombre-texto">${datosPropio.username}</span>`;
+    document.getElementById('perfilRival').innerHTML = `<div class="info-usuario">${renderizarAvatarHtml(datosRival.username, datosRival.avatar)} <span class="nombre-texto">${datosRival.username}</span></div>`;
+    document.getElementById('perfilPropio').innerHTML = `<div class="info-usuario">${renderizarAvatarHtml(datosPropio.username, datosPropio.avatar)} <span class="nombre-texto">${datosPropio.username}</span></div>`;
 });
 </script>
 
